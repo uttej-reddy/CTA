@@ -37,23 +37,17 @@ class KafkaConsumer:
         #
         #
         self.broker_properties = {
-            "schema.registry.url": "http://localhost:8081",
-            "bootstrap.servers" : "PLAINTEXT://localhost:9092"
+            "bootstrap.servers" : "PLAINTEXT://localhost:9092",
+            "group.id" : "0",
+            "auto.offset.reset": "earliest" if self.offset_earliest else "latest"
         }
 
         # TODO: Create the Consumer, using the appropriate type.
         if is_avro is True:
             self.broker_properties["schema.registry.url"] = "http://localhost:8081"
-            self.consumer = AvroConsumer(
-                {
-                   "schema.registry.url": "http://localhost:8081",
-                    "bootstrap.servers" : "PLAINTEXT://localhost:9092",
-                     "group.id" : "0",
-                    "auto.offset.reset": "earliest"
-                }
-            )
+            self.consumer = AvroConsumer(self.broker_properties)
         else:
-            self.consumer = Consumer({"bootstrap.servers": "PLAINTEXT://localhost:9092", "group.id": "0"})
+            self.consumer = Consumer(self.broker_properties)
             pass
 
         #
@@ -100,6 +94,7 @@ class KafkaConsumer:
             print(f"error from consumer {message.error()}")
             return 0
         else:
+            self.message_handler(message)
             print(f"consumed message {message.key()}: {message.value()}")
             return 1
         #logger.info("_consume is incomplete - skipping")
